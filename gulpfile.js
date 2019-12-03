@@ -8,11 +8,14 @@ const gulp = require('gulp');
 const sass = require('gulp-sass');
 const browserSync = require('browser-sync').create();
 sass.compiler = require('node-sass');
+const sourcemaps = require('gulp-sourcemaps');
 
 //compile scss into css
 function style() {
     return gulp.src('src/scss/**/*.scss')
+        .pipe(sourcemaps.init())
         .pipe(sass({ outputStyle: "compact" }).on('error', sass.logError)) //change 'compact' to 'expanded' for fuller view in output
+        .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('src/css'))
         .pipe(browserSync.stream());
 }
