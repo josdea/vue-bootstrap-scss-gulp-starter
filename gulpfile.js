@@ -12,7 +12,7 @@ sass.compiler = require('node-sass');
 //compile scss into css
 function style() {
     return gulp.src('src/scss/**/*.scss')
-        .pipe(sass({ outputStyle: "expanded" }).on('error', sass.logError))
+        .pipe(sass({ outputStyle: "compact" }).on('error', sass.logError)) //change 'compact' to 'expanded' for fuller view in output
         .pipe(gulp.dest('src/css'))
         .pipe(browserSync.stream());
 }
