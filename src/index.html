@@ -1,65 +1,359 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>TODO Title</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  <link rel="stylesheet" href="css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <title>Tabletop Form</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
+  <style>
+    #app {
+      margin-top: 1em;
+    }
+
+    div.person {
+      /* padding: 6px 0px; */
+    }
+
+    div #table {
+      height: 500px;
+      overflow-y: auto;
+    }
+    .progress {
+      height: 20px;
+    }
+   .border-bottom{
+     border-width: 5px!important;
+    }
+/* td{
+  vertical-align: middle!important;
+} */
+    @media print {
+      div #table {
+        height: inherit;
+        overflow-y: auto;
+      }
+    }
+  </style>
 </head>
 
-<body>
-  <div id="app" class="container">
-    <h1>heading</h1>
-    {{ message }} <br> {{reversedMessage}}
-    <ol>
-      <li is="todo-item" v-for="(item, index) in items" :index="index" :key="item.id" :todo="item"></li>
-    </ol>
-    <todo-item :todo="{message:'test item',id:4}" :index="'0'"></todo-item>
+<body class="h-100">
+  <div class="container-fluid h-100" id="app">
+<!-- TODO prevent form from submitting when creating adversary  -->
+    <div class="row text-center">
+      <div class="col-8">
+        <div class="form-group row">
+          <label class="col-2 col-form-label" for="scenario_name"
+            :title="labels[0].scenarioTitle">{{labels[currentLanguage].scenarioTitle}}</label>
+          <div class="col-10">
+            <input id="scenario_name" name="scenario_name" type="text" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="form-group row">
+          <div class="col-2"></div>
+          <div class="col-10">
+            <div class="custom-control custom-radio custom-control-inline">
+              <input name="day_night" id="day_night_0" type="radio" class="custom-control-input" value="day">
+              <label for="day_night_0" class="custom-control-label"
+                :title="labels[0].day">{{labels[currentLanguage].day}}</label>
+            </div>
+            <div class="custom-control custom-radio custom-control-inline">
+              <input name="day_night" id="day_night_1" type="radio" class="custom-control-input" value="night">
+              <label for="day_night_1" class="custom-control-label"
+                :title="labels[0].night">{{labels[currentLanguage].night}}</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="adversaryStatus.length > 0 || pForceStatus.length > 0" class="progress mb-1">
+      <div class="progress-bar bg-danger" role="progressbar" :style="'width: '+ adversaryProgress+'%'"
+        :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress}}%</div>
+      <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
+        :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">{{(100- adversaryProgress)}}%
+      </div>
+
+    </div>
+
+    <!-- START CARDS ROW -->
+    <div class="row pb-3">
+      <div class="col-sm-6">
+        <div class="card">
+          <!-- <div class="card-header bg-danger text-light text-center">
+            {{labels[currentLanguage].adversaries}}
+          </div> -->
+          <div class="card-body">
+            <h5 class="card-title">{{labels[currentLanguage].adversaries}}</h5>
+            
+            <form v-if="adversaryStatus.length == 0" class="form-inline  justify-content-center">
+              <label class="sr-only" for="adversaryCount" :title="labels[0].adversaryCount">Adversary Count</label>
+              <input v-model="adversaryCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
+                class="form-control mb-2 mr-sm-2" id="adversaryCount">
+
+
+              <!-- TODO translate -->
+              <button v-on:click="createPlayers('a')" type="button" class="btn mb-2">Create Adversaries:
+                {{adversaryCount}}</button>
+            </form>
+
+            <div class="row">
+              <div v-for="(item, index) in adversaryStatus" class="col-sm-2 text-center lead">
+                <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-danger"></i><span > A{{index+1}}</span></div>
+              </div>
+            </div>
+
+            <!-- <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a> -->
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card">
+          <!-- <div class="card-header bg-primary text-light text-center">
+            {{labels[currentLanguage].protectiveForce}}
+          </div> -->
+          <div class="card-body">
+            <h5 class="card-title">{{labels[currentLanguage].protectiveForce}}</h5>
+           
+            <form v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
+              <label class="sr-only" for="forceCount" :title="labels[0].forceCount">Adversary Count</label>
+              <input v-model="forceCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
+                class="form-control mb-2 mr-sm-2" id="forceCount">
+
+
+              <!-- TODO translate -->
+              <button v-on:click="createPlayers('p')" type="button" class="btn mb-2">Create Protective Force:
+                {{forceCount}}</button>
+            </form>
+           
+            <div class="row">
+              <div v-for="(item, index) in pForceStatus" class="col-sm-2 text-center lead">
+                <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-primary"></i><span > P{{index+1}}</span></div>
+              </div>
+            </div>
+
+            <!-- <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a> -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BEGIN LOG TABLE -->
+       <div id="table" class="table-responsive-sm">
+      <table id="log" class="table table-bordered text-center">
+        <thead class="thead-dark">
+          <tr>
+            <!-- <th scope="col">#</th> -->
+            <th scope="col" :title="labels[0].time">{{labels[currentLanguage].time}}</th>
+            <th scope="col" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
+            <th scope="col" class="w-25" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
+            <th scope="col" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
+            <th scope="col" class="w-25" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
+          </tr>
+        </thead>
+        <tbody class="align-middle">
+          <tr v-for="x in Number(tableRowCount)">
+            <!-- <td class="number align-middle">{{x}}</td> -->
+            <td class="time align-middle" contenteditable="true"></td>
+            <td class="player align-middle" :contenteditable="!dropdowns">
+
+              <div>
+                <select v-if="dropdowns" id="player" name="player" class="custom-select">
+                  <option selected disabled></option>
+                  <option v-for="index in Number(adversaryCount)" :value="'a'+index"> A{{index}}</option>
+
+                  <option v-for="index2 in Number(forceCount)" :value="'p'+index2">P{{index2}}</option>
+                </select>
+
+              </div>
+            </td>
+            <td class="action align-middle" contenteditable="true">
+            </td>
+            <td class="dice align-middle" :contenteditable="!dropdowns">
+              <select v-if="dropdowns" id="dice" name="dice" class="custom-select">
+                <option selected disabled></option>
+                <option v-for="x in 11" :value="x+1">{{x+1}}</option>
+              </select>
+            </td>
+            <td class="result align-middle" :contenteditable="!dropdowns">
+
+              <div v-if="dropdowns" class="row">
+                <div class="col">
+                  <select id="player2" name="player2" class="custom-select">
+                    <option selected disabled></option>
+                    <option v-for="index in Number(adversaryCount)" :value="'a'+index">A{{index}}</option>
+                    <option v-for="index2 in Number(forceCount)" :value="'p'+index2">P{{index2}}</option>
+                  </select>
+                </div>
+                <div class="col">
+
+                  <select v-if="dropdowns" id="result" name="result" class="custom-select">
+                    <option selected disabled></option>
+                    <option value="m" :title="labels[0].miss">{{labels[currentLanguage].miss}}</option>
+                    <option value="w" :title="labels[0].wounded">{{labels[currentLanguage].wounded}}</option>
+                    <option value="k" :title="labels[0].kill">{{labels[currentLanguage].kill}}</option>
+                  </select>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="form-group row text-right d-print-none">
+        <label for="row_count" class="col col-form-label"
+          :title="labels[0].tableRowCount">{{labels[currentLanguage].tableRowCount}}</label>
+        <div class="col-2">
+          <input id="row_count" v-model="tableRowCount" name="adversary_count" type="number" min="1" step="1"
+            class="form-control">
+        </div>
+      </div>
+      <div id="options" class="text-right d-print-none">
+        <div class="custom-control custom-checkbox custom-control-inline">
+          <input name="checkbox" id="checkbox_0" type="checkbox" class="custom-control-input" v-model="dropdowns">
+          <label for="checkbox_0" class="custom-control-label"
+            :title="labels[0].dropdowns">{{labels[currentLanguage].dropdowns}} ({{dropdowns}})</label>
+        </div>
+        <div class="form-group row">
+          <label for="lang" class="col col-form-label"
+            :title="labels[0].language">{{labels[currentLanguage].language}}</label>
+          <div class="col-3">
+            <select id="lang" name="language" class="custom-select" v-model="currentLanguage">
+              <option v-for="(item, index) in labels" :value="index" :title="labels[0].languageTitle">
+                {{item.languageTitle}}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <script>
-    Vue.component('todo-item', {
-      props: ['todo', 'index'],
-      template: '<li>This is a todo - Key:{{todo.id}} | Index:{{index}} {{todo.message}}</li>'
-    });
-
     var app = new Vue({
-      el: '#app',
+      el: "#app",
       data: {
-        message: 'Hello Vue!',
-        items: [{
-            id: 1,
-            message: 'Foo'
+        currentLanguage: 0,
+        dropdowns: false,
+        adversaryCount: 12,
+        forceCount: 12,
+        personMax: 100,
+        tableRowCount: 8,
+        logTable: [],
+        adversaryStatus: [],
+        pForceStatus: [],
+
+        labels: [{
+            languageTitle: "English",
+            scenarioTitle: "Scenario",
+            day: "Day",
+            night: "Night",
+            adversaries: "Adversaries",
+            protectiveForce: "Protective Force",
+            adversaryCount: "Adversary Count",
+            forceCount: "Protective Force Count",
+            time: "Time",
+            dice: "Dice",
+            player: "Player",
+            action: "Action",
+            result: "Result",
+            miss: "Miss",
+            wounded: "Wound",
+            kill: "Kill",
+            language: "Language",
+            dropdowns: "Dropdowns",
+            tableRowCount: "Table Row Count"
           },
           {
-            id: 2,
-            message: 'Bar'
+            languageTitle: "Español",
+            scenarioTitle: "Guión",
+            day: "Día",
+            night: "Noche",
+            adversaries: "Adversarios",
+            protectiveForce: "Fuerza protectora",
+            adversaryCount: "Conteo Adversario",
+            forceCount: "Recuento de fuerza protectora",
+            time: "Hora",
+            dice: "Dado",
+            player: "Jugador",
+            action: "Acción",
+            result: "Resultado",
+            miss: "Pierda",
+            wounded: "Herida",
+            kill: "Matar",
+            language: "Idioma",
+            dropdowns: "Listas deplegables",
+            tableRowCount: "Recuento de filas de tabla"
+          },
+          {
+            languageTitle: "عربى",
+            scenarioTitle: "سيناريو",
+            day: "يوم",
+            night: "ليل",
+            adversaries: "الخصوم",
+            protectiveForce: "قوة الحماية",
+            adversaryCount: "عد الخصم",
+            forceCount: "عدد قوة الحماية",
+            time: "زمن",
+            dice: "حجر النرد",
+            player: "لاعب",
+            action: "عمل",
+            result: "نتيجة",
+            miss: "يغيب",
+            wounded: "جرح",
+            kill: "قتل",
+            language: "لغة",
+            dropdowns: "هبوط قطرة",
+            tableRowCount: "جدول عدد الصفوف"
           }
         ]
       },
-      created: function () {
-        console.log("Created")
-      },
       computed: {
-        reversedMessage: function () {
-          return this.message.split('').reverse().join('')
+        adversaryProgress: function () {
+          let aAlive = this.adversaryStatus.filter(item => item == 1);
+          let pfAlive = this.pForceStatus.filter(item => item == 1);
+          return aAlive.length / (aAlive.length + pfAlive.length) * 100
         }
       },
       methods: {
-        functionName: function () {
+        createPlayers: function (playerType) {
 
+          if (playerType == 'a') {
+            this.adversaryStatus = new Array(Number(this.adversaryCount)).fill(1);
+            console.log("did it")
+            console.log("size is " + this.adversaryStatus)
+          }
+
+          if (playerType == 'p') {
+            this.pForceStatus = new Array(Number(this.forceCount)).fill(1);
+            console.log("did it")
+            console.log("size is " + this.pForceStatus)
+          }
+
+        },
+        getStyleStatus: function (status) {
+          let style = ""
+
+          switch (status){
+            case 1:
+            style = " border-bottom border-success"
+            break;  
+          }
+
+          // if (status == 1) {
+          //   style = " border-bottom border-success"
+          // }
+
+          return style
         }
       }
     });
   </script>
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
 </body>
 
 </html>
