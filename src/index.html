@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
   <style>
     #app {
-      margin-top: 1em;
+      padding-top: 1em;
     }
 
     div.person {
@@ -16,7 +16,7 @@
     }
 
     div #table {
-      height: 500px;
+      height: 600px;
       overflow-y: auto;
     }
 
@@ -71,11 +71,11 @@
         </div>
       </div>
     </div>
-    <div v-if="adversaryStatus.length > 0 || pForceStatus.length > 0" class="progress mb-1">
+    <div v-if="adversaryStatus.length > 0 || pForceStatus.length > 0" class="progress mb-3">
       <div class="progress-bar bg-danger" role="progressbar" :style="'width: '+ adversaryProgress+'%'"
-        :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress}}%</div>
+        :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress.toFixed(2)}}%</div>
       <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
-        :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">{{(100- adversaryProgress)}}%
+        :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">{{(100- adversaryProgress).toFixed(2)}}%
       </div>
     </div>
     <!-- START CARDS ROW -->
@@ -83,15 +83,17 @@
       <div class="col-sm-6 pb-3">
         <div class="card ">
           <div class="card-body">
-            <h5 class="card-title">{{labels[currentLanguage].adversaries}}</h5>
-            <form v-if="adversaryStatus.length == 0" class="form-inline  justify-content-center">
-              <label class="sr-only" for="adversaryCount" :title="labels[0].adversaryCount">Adversary Count</label>
-              <input v-model="adversaryCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
-                class="form-control mb-2 mr-sm-2" id="adversaryCount">
+            <h5 v-if="adversaryStatus.length>0" class="card-title">{{labels[currentLanguage].adversaries}}</h5>
+            <form @submit.prevent v-if="adversaryStatus.length == 0" class="form-inline  justify-content-center">
+              <label class="sr-only" for="createAdversariesCount" :title="labels[0].createAdversariesCount">Adversary
+                Count</label>
+              <input v-model="createAdversariesCount" name="adversary_count" type="number" min="1" :max="personMax"
+                step="1" class="form-control mb-2 mr-sm-2" id="createAdversariesCount">
               <!-- TODO translate -->
               <button v-on:click="createPlayers('a')" type="button" class="btn btn-danger mb-2">Create Adversaries:
-                {{adversaryCount}}</button>
+                {{createAdversariesCount}}</button>
             </form>
+
             <div class="row">
               <div v-for="(item, index) in adversaryStatus" class="col-sm-2 text-center lead">
                 <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-danger"></i><span>
@@ -104,8 +106,8 @@
       <div class="col-sm-6 pb-3">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">{{labels[currentLanguage].protectiveForce}}</h5>
-            <form v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
+            <h5 v-if="pForceStatus.length>0" class="card-title">{{labels[currentLanguage].protectiveForce}}</h5>
+            <form @submit.prevent v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
               <label class="sr-only" for="forceCount" :title="labels[0].forceCount">Adversary Count</label>
               <input v-model="forceCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
                 class="form-control mb-2 mr-sm-2" id="forceCount">
@@ -125,39 +127,76 @@
       </div>
     </div>
     <!-- BEGIN LOG TABLE -->
-    <div id="table" class="table-responsive-sm">
+    <div id="table" class="">
       <table id="log" class="table table-bordered text-center">
         <thead class="thead-dark">
           <tr>
             <th scope="col" style="width: 10%" :title="labels[0].time">{{labels[currentLanguage].time}}</th>
-            <th scope="col" style="width: 10%" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
+            <th scope="col" style="width: 5%" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
             <th scope="col" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
-            <th scope="col" style="width: 5%" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
+            <th scope="col" style="width: 8%" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
             <th scope="col" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
           </tr>
         </thead>
         <tbody class="align-middle">
           <template v-for="(item, index) in logTableSample">
-            <tr v-for="(action, indexaction) in item.actions">
-              <th v-if="indexaction==0" class="time align-middle" scope="rowgroup" :rowspan="(item.actions.length)">
+            <tr v-on:click="createResultModal(index,indexaction)" v-for="(action, indexaction) in item.actions">
+              <th v-if="indexaction==0" class="time align-middle" scope="rowgroup" :rowspan="(item.actions.length)" :title="item.interval">
                 {{item.interval}}
               </th>
-              <td class="player align-middle">
+              <td class="player">
                 {{item.actions[indexaction].player}}
               </td>
-              <td class="action align-middle">
-                {{item.actions[indexaction].action}}
+              <td class="action">
+                <!-- <span class=" d-print-block"> -->
+                  {{item.actions[indexaction].action}}
+                <!-- </span> -->
+                <!-- <input type="text" name="action" :id="index+indexaction" v-model="item.actions[indexaction].action"
+                  list="mySuggestion" class="w-100 d-print-none">
+                <datalist id="mySuggestion">
+                  <option v-for="(item, index) in readUniqueActions">{{item}}</option>
+                </datalist> -->
               </td>
-              <td class="dice align-middle">
-                {{item.actions[indexaction].dice}}
+              <td class="dice">
+                <!-- <span class=" d-print-block"> -->
+                  {{item.actions[indexaction].dice}}
+                <!-- </span> -->
+                <!-- <select name="dice" id="dice" v-model="item.actions[indexaction].dice" class="w-100 d-print-none">
+                  <option value="0" disabled selected>-</option>
+                  <option v-for="x in 11" :value="x+1">{{x+1}}</option>
+                </select> -->
+
+                <!-- <input type="number" min="2" max="12" step="1" name="action" :id="index+indexaction"
+                  v-model="item.actions[indexaction].dice" class="w-100 d-print-none"> -->
               </td>
-              <td class="result align-middle">
-                {{item.actions[indexaction].result}}
+              <td class="result">
+                <!-- <span class=" d-print-inline"> -->
+                  {{item.actions[indexaction].resultPlayer.toString()}}
+                <!-- </span> -->
+                <!-- <select v-if="adversaryStatus.length>0 && pForceStatus.length>0" class="custom-select w-50 d-print-none"
+                  multiple v-model="item.actions[indexaction].resultPlayer" size="2">
+                  <option v-for="(playerResult, index) in readPlayersForResults(item.actions[indexaction].player)"
+                    :value="playerResult">{{playerResult}}</option>
+
+                </select> -->
+                <!-- TODO link this to data -->
+                <!-- <select v-model="item.actions[indexaction].resultOutcome" name="resultAction" id="resultAction">
+                  <option :value="labels[currentLanguage].miss">{{labels[currentLanguage].miss}}</option>
+                  <option :value="labels[currentLanguage].wounded">{{labels[currentLanguage].wounded}}</option>
+                  <option :value="labels[currentLanguage].kill">{{labels[currentLanguage].kill}}</option>
+                </select> -->
+
+                {{item.actions[indexaction].resultOutcome}}
               </td>
             </tr>
           </template>
         </tbody>
       </table>
+      <div v-if="" class="btn-group" role="group" aria-label="Basic example">
+        <button v-if="adversaryStatus.length>0 && pForceStatus.length>0" v-on:click="createInterval(currentTeam)">
+          Next Team</button>
+        <!-- <button v-if="pForceStatus.length>0" v-on:click="createInterval('p')">Protective Force Team</button> -->
+      </div>
     </div>
     <div>
       <div id="options" class="text-right d-print-none">
@@ -166,89 +205,123 @@
             :title="labels[0].language">{{labels[currentLanguage].language}}</label>
           <div class="col-3">
             <select id="lang" name="language" class="custom-select" v-model="currentLanguage">
-              <option v-for="(item, index) in labels" :value="index" :title="labels[0].languageTitle">
-                {{item.languageTitle}}</option>
+              <optgroup :label="labels[currentLanguage].language">
+                <option v-for="(item, index) in labels" :value="index" :title="labels[0].languageTitle">
+                  {{item.languageTitle}}</option>
+              </optgroup>
             </select>
           </div>
         </div>
       </div>
+<!-- <button v-on:click="createResultModal(0,0)">modal</button> -->
+<!-- TODO remove comments -->
+<!-- TODO update icons -->
+<!-- TODO use function for removing players when modal closes -->
+<!-- TODO table fill screen check printing -->
+<!-- TODO button to say next interval -->
+
+<!-- BEGIN ACTION MODAL -->
+      <div id="myModal" class="modal" tabindex="-1" role="dialog" ref="vuemodal">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div v-if="currentActionIndex!=-1 && currentItemIndex!=-1" class="modal-body">
+
+                  <form>
+                      <div class="form-group">
+                        <label class="sr-only" for="timeinterval">Time Interval</label> 
+                        <input v-model="logTableSample[currentItemIndex].interval" readonly id="timeinterval" name="timeinterval" placeholder="Time Interval" type="text" class="form-control">
+                      </div>
+                      <div class="form-group">
+                        <label class="sr-only" for="player">Player</label> 
+                        <input v-model="logTableSample[currentItemIndex].actions[currentActionIndex].player" readonly id="player" name="player" placeholder="Player" type="text" class="form-control">
+                      </div>
+
+                      <div class="form-group">
+                          <label class="sr-only" for="action">Action</label> 
+                          <input v-model="logTableSample[currentItemIndex].actions[currentActionIndex].action" id="action" name="action" list="mySuggestion" placeholder="Action" type="text" class="form-control">
+                          <datalist id="mySuggestion">
+                              <option v-for="(action, index) in readUniqueActions">{{action}}</option>
+                            </datalist>
+                          </div> 
+
+                      <div class="form-group">
+                        <label class="sr-only" for="dice">Dice</label> 
+                        <div>
+                          <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].dice" id="dice" name="dice" class="custom-select">
+                              <option value="" disabled>Dice</option>
+                              <option v-for="x in 11" :value="x+1">{{x+1}}</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label class="" for="playerResults">Resulting Player(s) <small>Hold <kbd>ctrl</kbd> to select multiple</small></label> 
+                        <div>
+                          <select v-if="adversaryStatus.length>0 && pForceStatus.length>0" multiple="multiple" id="playerResults" name="playerResults" class="custom-select"
+                              v-model="logTableSample[currentItemIndex].actions[currentItemIndex].resultPlayer" size="3">
+                              <option 
+                              v-for="(playerResult, index) in readPlayersForResults(logTableSample[currentItemIndex].actions[currentItemIndex].player)"
+                              :value="playerResult">{{playerResult}}</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label class="" for="resultaction">Resulting Outcome</label> 
+                        <div>
+                          <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultOutcome" id="resultaction" name="resultaction" class="custom-select">
+                              <option :value="labels[currentLanguage].miss">{{labels[currentLanguage].miss}}</option>
+                              <option :value="labels[currentLanguage].wounded">{{labels[currentLanguage].wounded}}</option>
+                              <option :value="labels[currentLanguage].kill">{{labels[currentLanguage].kill}}</option>
+                          </select>
+                        </div>
+                      </div> 
+                      <!-- <div class="form-group">
+                        <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+                      </div> -->
+                    </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <!-- <button type="button" class="btn btn-primary">Update</button> -->
+              </div>
+            </div>
+          </div>
+        </div>
+
     </div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <script>
     var app = new Vue({
       el: "#app",
       data: {
-        logTableSample: [{
-            interval: "0-30",
-            actions: [{
-                player: 'A1',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              },
-              {
-                player: 'A2',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              },
-              {
-                player: 'P3',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              },
-              {
-                player: 'P4',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              }
-            ],
-          },
-          {
-            interval: "30-60",
-            actions: [{
-                player: 'A1',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              },
-              {
-                player: 'A2',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              },
-              {
-                player: 'P3',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              },
-              {
-                player: 'P4',
-                action: "advance and engage",
-                dice: 8,
-                result: "wound"
-              }
-            ]
-          }
-        ],
-        resultList: [],
-        actionList: [],
+        test: 'ho',
+        currentTeam: 'a',
+        currentActionIndex: -1, //for modal 
+        currentItemIndex: -1,
+        arrTest: ['a'],
+        currentIntervalStart: 0,
+        intervalDuraction: 30,
+        logTableSample: [],
+        // resultList: [],
+        // actionList: [],
         currentLanguage: 0,
-        dropdowns: false,
-        adversaryCount: 12,
-        forceCount: 12,
+        // dropdowns: false,
+        createAdversariesCount: 5,
+        forceCount: 5,
         personMax: 100,
-        tableRowCount: 8,
+        // tableRowCount: 8,
         logTable: [],
         adversaryStatus: [],
         pForceStatus: [],
-
         labels: [{
             languageTitle: "English",
             scenarioTitle: "Scenario",
@@ -256,7 +329,7 @@
             night: "Night",
             adversaries: "Adversaries",
             protectiveForce: "Protective Force",
-            adversaryCount: "Adversary Count",
+            createAdversariesCount: "Adversary Count",
             forceCount: "Protective Force Count",
             time: "Time",
             dice: "Dice",
@@ -277,7 +350,7 @@
             night: "Noche",
             adversaries: "Adversarios",
             protectiveForce: "Fuerza protectora",
-            adversaryCount: "Conteo Adversario",
+            createAdversariesCount: "Conteo Adversario",
             forceCount: "Recuento de fuerza protectora",
             time: "Hora",
             dice: "Dado",
@@ -298,7 +371,7 @@
             night: "ليل",
             adversaries: "الخصوم",
             protectiveForce: "قوة الحماية",
-            adversaryCount: "عد الخصم",
+            createAdversariesCount: "عد الخصم",
             forceCount: "عدد قوة الحماية",
             time: "زمن",
             dice: "حجر النرد",
@@ -319,23 +392,35 @@
           let aAlive = this.adversaryStatus.filter(item => item == 1);
           let pfAlive = this.pForceStatus.filter(item => item == 1);
           return aAlive.length / (aAlive.length + pfAlive.length) * 100
-        }
+        },
+        readUniqueActions: function () {
+          let actions = []
+          this.logTableSample.forEach(interval => {
+            interval.actions.forEach(action => {
+              if (actions.indexOf(action.action) < 0) {
+                actions.push(action.action)
+              }
+            });
+          });
+          return actions
+        },
+      },
+      mounted(){
+      $(this.$refs.vuemodal).on("hidden.bs.modal", this.modalHidden)
       },
       methods: {
+        modalHidden: function(){
+          console.log("made it modal hidden")
+          // TODO update player
+        },
         createPlayers: function (playerType) {
-
           if (playerType == 'a') {
-            this.adversaryStatus = new Array(Number(this.adversaryCount)).fill(1);
-            console.log("did it")
-            console.log("size is " + this.adversaryStatus)
+            this.adversaryStatus = new Array(Number(this.createAdversariesCount)).fill(1);
+            this.createInterval('a')
           }
-
           if (playerType == 'p') {
             this.pForceStatus = new Array(Number(this.forceCount)).fill(1);
-            console.log("did it")
-            console.log("size is " + this.pForceStatus)
           }
-
         },
         getStyleStatus: function (status) {
           let style = ""
@@ -345,12 +430,68 @@
               style = " border-bottom border-success"
               break;
           }
-
-          // if (status == 1) {
-          //   style = " border-bottom border-success"
-          // }
-
           return style
+        },
+        createInterval: function (playertype) {
+          let tempActions = []
+          if (playertype == 'a') {
+            this.currentTeam = 'p'
+            this.adversaryStatus.forEach((element, index) => {
+              if (element == 1) {
+                tempActions.push({
+                  player: 'A' + (index + 1),
+                  action: '',
+                  dice: "",
+                  resultPlayer: [],
+                  resultOutcome: ''
+                })
+              }
+            });
+            let tempInterval = {
+              interval: this.currentIntervalStart + '-' + (this.currentIntervalStart + this.intervalDuraction),
+              actions: tempActions
+            }
+            this.logTableSample.push(tempInterval)
+            this.currentIntervalStart += this.intervalDuraction
+          } else if (playertype == 'p') {
+            this.currentTeam = 'a'
+            this.pForceStatus.forEach((element, index) => {
+              if (element == 1) {
+                this.logTableSample[this.logTableSample.length - 1].actions.push({
+                  player: 'P' + (index + 1),
+                  action: '',
+                  dice: "",
+                  resultPlayer: [],
+                  resultOutcome: ''
+                })
+              }
+            });
+          }
+        },
+        readPlayersForResults(currentTeam) {
+          currentTeam = currentTeam.charAt(0).toLowerCase()
+          let playerList = []
+          playerList.length = 0
+          if (currentTeam == 'a') {
+            this.pForceStatus.forEach((element, index) => {
+              if (element == 1) {
+                playerList.push('P' + (index + 1))
+              }
+            });
+          } else if (currentTeam == 'p') {
+            this.adversaryStatus.forEach((element, index) => {
+              if (element == 1) {
+                playerList.push('A' + (index + 1))
+              }
+            });
+          }
+          return playerList
+        },
+        createResultModal(itemIndex,actionIndex){
+          console.log("modal here")
+          this.currentActionIndex = actionIndex
+          this.currentItemIndex = itemIndex
+        $('#myModal').modal(options)
         }
       }
     });
