@@ -19,13 +19,16 @@
       height: 500px;
       overflow-y: auto;
     }
+
     .progress {
       height: 20px;
     }
-   .border-bottom{
-     border-width: 5px!important;
+
+    .border-bottom {
+      border-width: 5px !important;
     }
-/* td{
+
+    /* td{
   vertical-align: middle!important;
 } */
     @media print {
@@ -39,7 +42,7 @@
 
 <body class="h-100">
   <div class="container-fluid h-100" id="app">
-<!-- TODO prevent form from submitting when creating adversary  -->
+    <!-- TODO prevent form from submitting when creating adversary  -->
     <div class="row text-center">
       <div class="col-8">
         <div class="form-group row">
@@ -74,150 +77,90 @@
       <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
         :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">{{(100- adversaryProgress)}}%
       </div>
-
     </div>
-
     <!-- START CARDS ROW -->
-    <div class="row pb-3">
-      <div class="col-sm-6">
-        <div class="card">
-          <!-- <div class="card-header bg-danger text-light text-center">
-            {{labels[currentLanguage].adversaries}}
-          </div> -->
+    <div class="row ">
+      <div class="col-sm-6 pb-3">
+        <div class="card ">
           <div class="card-body">
             <h5 class="card-title">{{labels[currentLanguage].adversaries}}</h5>
-            
             <form v-if="adversaryStatus.length == 0" class="form-inline  justify-content-center">
               <label class="sr-only" for="adversaryCount" :title="labels[0].adversaryCount">Adversary Count</label>
               <input v-model="adversaryCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
                 class="form-control mb-2 mr-sm-2" id="adversaryCount">
-
-
               <!-- TODO translate -->
-              <button v-on:click="createPlayers('a')" type="button" class="btn mb-2">Create Adversaries:
+              <button v-on:click="createPlayers('a')" type="button" class="btn btn-danger mb-2">Create Adversaries:
                 {{adversaryCount}}</button>
             </form>
-
             <div class="row">
               <div v-for="(item, index) in adversaryStatus" class="col-sm-2 text-center lead">
-                <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-danger"></i><span > A{{index+1}}</span></div>
+                <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-danger"></i><span>
+                    A{{index+1}}</span></div>
               </div>
             </div>
-
-            <!-- <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-            <a href="#" class="btn btn-primary">Go somewhere</a> -->
           </div>
         </div>
       </div>
-      <div class="col-sm-6">
+      <div class="col-sm-6 pb-3">
         <div class="card">
-          <!-- <div class="card-header bg-primary text-light text-center">
-            {{labels[currentLanguage].protectiveForce}}
-          </div> -->
           <div class="card-body">
             <h5 class="card-title">{{labels[currentLanguage].protectiveForce}}</h5>
-           
             <form v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
               <label class="sr-only" for="forceCount" :title="labels[0].forceCount">Adversary Count</label>
               <input v-model="forceCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
                 class="form-control mb-2 mr-sm-2" id="forceCount">
-
-
               <!-- TODO translate -->
-              <button v-on:click="createPlayers('p')" type="button" class="btn mb-2">Create Protective Force:
+              <button v-on:click="createPlayers('p')" type="button" class="btn btn-primary mb-2">Create Protective
+                Force:
                 {{forceCount}}</button>
             </form>
-           
             <div class="row">
               <div v-for="(item, index) in pForceStatus" class="col-sm-2 text-center lead">
-                <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-primary"></i><span > P{{index+1}}</span></div>
+                <div :class="'person ' + getStyleStatus(item)"><i class="fas fa-user text-primary"></i><span>
+                    P{{index+1}}</span></div>
               </div>
             </div>
-
-            <!-- <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-            <a href="#" class="btn btn-primary">Go somewhere</a> -->
           </div>
         </div>
       </div>
     </div>
-
     <!-- BEGIN LOG TABLE -->
-       <div id="table" class="table-responsive-sm">
+    <div id="table" class="table-responsive-sm">
       <table id="log" class="table table-bordered text-center">
         <thead class="thead-dark">
           <tr>
-            <!-- <th scope="col">#</th> -->
-            <th scope="col" :title="labels[0].time">{{labels[currentLanguage].time}}</th>
-            <th scope="col" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
-            <th scope="col" class="w-25" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
-            <th scope="col" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
-            <th scope="col" class="w-25" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
+            <th scope="col" style="width: 10%" :title="labels[0].time">{{labels[currentLanguage].time}}</th>
+            <th scope="col" style="width: 10%" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
+            <th scope="col" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
+            <th scope="col" style="width: 5%" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
+            <th scope="col" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
           </tr>
         </thead>
         <tbody class="align-middle">
-          <tr v-for="x in Number(tableRowCount)">
-            <!-- <td class="number align-middle">{{x}}</td> -->
-            <td class="time align-middle" contenteditable="true"></td>
-            <td class="player align-middle" :contenteditable="!dropdowns">
-
-              <div>
-                <select v-if="dropdowns" id="player" name="player" class="custom-select">
-                  <option selected disabled></option>
-                  <option v-for="index in Number(adversaryCount)" :value="'a'+index"> A{{index}}</option>
-
-                  <option v-for="index2 in Number(forceCount)" :value="'p'+index2">P{{index2}}</option>
-                </select>
-
-              </div>
-            </td>
-            <td class="action align-middle" contenteditable="true">
-            </td>
-            <td class="dice align-middle" :contenteditable="!dropdowns">
-              <select v-if="dropdowns" id="dice" name="dice" class="custom-select">
-                <option selected disabled></option>
-                <option v-for="x in 11" :value="x+1">{{x+1}}</option>
-              </select>
-            </td>
-            <td class="result align-middle" :contenteditable="!dropdowns">
-
-              <div v-if="dropdowns" class="row">
-                <div class="col">
-                  <select id="player2" name="player2" class="custom-select">
-                    <option selected disabled></option>
-                    <option v-for="index in Number(adversaryCount)" :value="'a'+index">A{{index}}</option>
-                    <option v-for="index2 in Number(forceCount)" :value="'p'+index2">P{{index2}}</option>
-                  </select>
-                </div>
-                <div class="col">
-
-                  <select v-if="dropdowns" id="result" name="result" class="custom-select">
-                    <option selected disabled></option>
-                    <option value="m" :title="labels[0].miss">{{labels[currentLanguage].miss}}</option>
-                    <option value="w" :title="labels[0].wounded">{{labels[currentLanguage].wounded}}</option>
-                    <option value="k" :title="labels[0].kill">{{labels[currentLanguage].kill}}</option>
-                  </select>
-                </div>
-              </div>
-            </td>
-          </tr>
+          <template v-for="(item, index) in logTableSample">
+            <tr v-for="(action, indexaction) in item.actions">
+              <th v-if="indexaction==0" class="time align-middle" scope="rowgroup" :rowspan="(item.actions.length)">
+                {{item.interval}}
+              </th>
+              <td class="player align-middle">
+                {{item.actions[indexaction].player}}
+              </td>
+              <td class="action align-middle">
+                {{item.actions[indexaction].action}}
+              </td>
+              <td class="dice align-middle">
+                {{item.actions[indexaction].dice}}
+              </td>
+              <td class="result align-middle">
+                {{item.actions[indexaction].result}}
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
     <div>
-      <div class="form-group row text-right d-print-none">
-        <label for="row_count" class="col col-form-label"
-          :title="labels[0].tableRowCount">{{labels[currentLanguage].tableRowCount}}</label>
-        <div class="col-2">
-          <input id="row_count" v-model="tableRowCount" name="adversary_count" type="number" min="1" step="1"
-            class="form-control">
-        </div>
-      </div>
       <div id="options" class="text-right d-print-none">
-        <div class="custom-control custom-checkbox custom-control-inline">
-          <input name="checkbox" id="checkbox_0" type="checkbox" class="custom-control-input" v-model="dropdowns">
-          <label for="checkbox_0" class="custom-control-label"
-            :title="labels[0].dropdowns">{{labels[currentLanguage].dropdowns}} ({{dropdowns}})</label>
-        </div>
         <div class="form-group row">
           <label for="lang" class="col col-form-label"
             :title="labels[0].language">{{labels[currentLanguage].language}}</label>
@@ -237,6 +180,65 @@
     var app = new Vue({
       el: "#app",
       data: {
+        logTableSample: [{
+            interval: "0-30",
+            actions: [{
+                player: 'A1',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              },
+              {
+                player: 'A2',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              },
+              {
+                player: 'P3',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              },
+              {
+                player: 'P4',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              }
+            ],
+          },
+          {
+            interval: "30-60",
+            actions: [{
+                player: 'A1',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              },
+              {
+                player: 'A2',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              },
+              {
+                player: 'P3',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              },
+              {
+                player: 'P4',
+                action: "advance and engage",
+                dice: 8,
+                result: "wound"
+              }
+            ]
+          }
+        ],
+        resultList: [],
+        actionList: [],
         currentLanguage: 0,
         dropdowns: false,
         adversaryCount: 12,
@@ -338,10 +340,10 @@
         getStyleStatus: function (status) {
           let style = ""
 
-          switch (status){
+          switch (status) {
             case 1:
-            style = " border-bottom border-success"
-            break;  
+              style = " border-bottom border-success"
+              break;
           }
 
           // if (status == 1) {
