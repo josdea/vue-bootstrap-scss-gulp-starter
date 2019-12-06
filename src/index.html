@@ -6,6 +6,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
   <style>
+    * {
+      /* border: .5px solid pink; */
+    }
     #app {
       padding-top: 1em;
     }
@@ -20,21 +23,22 @@
       height: 20px;
     }
     .border-bottom {
-      border-width: 5px !important;
+      /* border-width: 5px !important; */
     }
     /* td{
   vertical-align: middle!important;
 } */
     @media print {
       div #table {
-        height: inherit;
-        overflow-y: auto;
+        height: auto;
+        overflow-y: none;
       }
     }
   </style>
 </head>
 <body class="h-100">
-  <div class="container-fluid h-100" id="app">
+  <div class="container-fluid h-100 " id="app">
+    <div class="top">
     <div class="row text-center">
       <div class="col-8">
         <div class="form-group row">
@@ -77,32 +81,18 @@
           <div class="card-body">
             <h5 v-if="adversaryStatus.length>0" class="card-title">{{labels[currentLanguage].adversaries}}</h5>
             <form @submit.prevent v-if="adversaryStatus.length == 0" class="form-inline  justify-content-center">
-              <label class="sr-only" for="createAdversariesCount" :title="labels[0].createAdversariesCount">Adversary
-                Count</label>
+              <label class="sr-only" for="createAdversariesCount" :title="labels[0].createAdversariesCount">{{labels[currentLanguage].createAdversariesCount}}</label>
               <input v-model="createAdversariesCount" name="adversary_count" type="number" min="1" :max="personMax"
                 step="1" class="form-control mb-2 mr-sm-2" id="createAdversariesCount">
-              <!-- TODO translate -->
-              <button v-on:click="createPlayers('a')" type="button" class="btn btn-danger mb-2">Create Adversaries:
+              <button v-on:click="createPlayers('a')" type="button" class="btn btn-danger mb-2">{{labels[currentLanguage].createAdversaries}}:
                 {{createAdversariesCount}}</button>
             </form>
             <div class="row">
               <div v-for="(item, index) in adversaryStatus" class="col-sm-2 text-left lead">
                 <div >
-                    <!-- <span class="fa-layers fa-fw" style="background:MistyRose">
-                        <i class="fas fa-envelope"></i>
-                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
-                      </span> -->
-                    <!-- <span class="fa-stack fa-lg">
-                        <i class="fas fa-user-secret fa-stack-1x text-danger"></i>
-                        <i class="far fa-circle fa-stack-2x text-warning"></i>
-                      </span> -->
-                      <!-- <span class="fa-stack fa-md">
-                          <i class="fas fa-circle fa-stack-2x text-warning"></i>
-                          <i class="fas fa-user-secret fa-stack-1x fa-inverse"></i>
-                      </span> -->
                   <i v-if="item==1" class="fas fa-user-secret fa-lg text-danger"></i>
-                  <i v-if="item == 2" class="fas fa-user-injured text-warning"></i>
-                  <i v-if="item == 0" class="fas fa-user-slash text-secondary"></i>
+                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-warning"></i>
+                  <i v-if="item == 0" class="fas fa-user-slash fa-md text-secondary"></i>
                   <span class="text-dark">
                     A{{index+1}}</span>
                 </div>
@@ -116,21 +106,18 @@
           <div class="card-body">
             <h5 v-if="pForceStatus.length>0" class="card-title">{{labels[currentLanguage].protectiveForce}}</h5>
             <form @submit.prevent v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
-              <label class="sr-only" for="forceCount" :title="labels[0].forceCount">Adversary Count</label>
+              <label class="sr-only" for="forceCount" :title="labels[0].forceCount">{{labels[currentLanguage].forceCount}}</label>
               <input v-model="forceCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
                 class="form-control mb-2 mr-sm-2" id="forceCount">
-              <!-- TODO translate -->
-              <button v-on:click="createPlayers('p')" type="button" class="btn btn-primary mb-2">Create Protective
-                Force:
+              <button v-on:click="createPlayers('p')" type="button" class="btn btn-primary mb-2">{{labels[currentLanguage].createProtectiveForce}}:
                 {{forceCount}}</button>
             </form>
             <div class="row">
               <div v-for="(item, index) in pForceStatus" class="col-sm-2 text-left lead">
                 <div>
-                  <!-- <i class="fas fa-user text-primary"></i> -->
                   <i v-if="item == 1" class="fas fa-user-tie fa-lg text-primary"></i>
-                  <i v-if="item == 2" class="fas fa-user-injured text-warning"></i>
-                  <i v-if="item == 0" class="fas fa-user-slash text-secondary"></i>
+                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-warning"></i>
+                  <i v-if="item == 0" class="fas fa-user-slash fa-md text-secondary"></i>
                   <span class="text-dark">
                     P{{index+1}}</span>
                 </div>
@@ -140,6 +127,7 @@
         </div>
       </div>
     </div>
+  </div>
     <!-- BEGIN LOG TABLE -->
     <div id="table" class="">
       <table id="log" class="table table-bordered text-center">
@@ -176,14 +164,15 @@
           </template>
         </tbody>
       </table>
-      <div v-if="" class="btn-group" role="group" aria-label="Basic example">
-        <button v-if="adversaryStatus.length>0 && pForceStatus.length>0" v-on:click="createInterval(currentTeam)">
-          {{(currentTeam =='a' ? "Next Round" : "Next Team")}}</button>
+      <div class="btn-group d-print-none" role="group" aria-label="Basic example">
+       
       </div>
     </div>
     <div>
       <div id="options" class="text-right d-print-none">
         <div class="form-group row">
+            <button v-if="adversaryStatus.length>0 && pForceStatus.length>0" v-on:click="createInterval(currentTeam)">
+                {{(currentTeam =='a' ? labels[currentLanguage].nextRound : labels[currentLanguage].nextTeam)}}</button>
           <label for="lang" class="col col-form-label"
             :title="labels[0].language">{{labels[currentLanguage].language}}</label>
           <div class="col-3">
@@ -197,11 +186,7 @@
         </div>
       </div>
       <!-- <button v-on:click="createResultModal(0,0)">modal</button> -->
-      <!-- TODO remove comments -->
-      <!-- TODO update icons -->
-      <!-- TODO use function for removing players when modal closes -->
       <!-- TODO table fill screen check printing -->
-      <!-- TODO button to say next interval -->
       <!-- BEGIN ACTION MODAL -->
       <div id="myModal" class="modal" tabindex="-1" role="dialog" ref="vuemodal">
         <div class="modal-dialog" role="document">
@@ -252,9 +237,6 @@
                       <option
                         v-for="(playerResult, index) in readPlayerStatusFromLog(logTableSample[currentItemIndex].actions[currentActionIndex].player, currentItemIndex, currentActionIndex)"
                         :value="playerResult">{{playerResult}}</option>
-                      <!-- <option
-                        v-for="(playerResult, index) in readPlayersForResults(logTableSample[currentItemIndex].actions[currentActionIndex].player)"
-                        :value="playerResult">{{playerResult}}</option> -->
                     </select>
                   </div>
                 </div>
@@ -269,15 +251,12 @@
                     </select>
                   </div>
                 </div>
-                <!-- <div class="form-group">
-                        <button name="submit" type="submit" class="btn btn-primary">Submit</button>
-                      </div> -->
               </form>
-              <!-- {{readPlayerStatusFromLog('a',0,5)}} -->
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               <!-- <button type="button" class="btn btn-primary">Update</button> -->
+              <!-- TODO next person -->
             </div>
           </div>
         </div>
@@ -302,20 +281,14 @@
         currentTeam: 'a',
         currentActionIndex: -1, //for modal 
         currentItemIndex: -1,
-        // arrTest: ['a'],
         currentIntervalStart: 0,
         intervalDuraction: 30,
         logTableSample: [],
         playerOutcomes: ['Kill', 'Miss', 'Wound'], //0 kill, 1 miss, 2 wound
-        // resultList: [],
-        // actionList: [],
         currentLanguage: 0,
-        // dropdowns: false,
         createAdversariesCount: 8,
         forceCount: 8,
         personMax: 100,
-        // tableRowCount: 8,
-        // logTable: [],
         adversaryStatus: [],
         pForceStatus: [],
         labels: [{
@@ -324,6 +297,8 @@
             day: "Day",
             night: "Night",
             adversaries: "Adversaries",
+            createAdversaries: "Create Adversaries",
+            createProtectiveForce: "Create Protective Force",
             protectiveForce: "Protective Force",
             createAdversariesCount: "Adversary Count",
             forceCount: "Protective Force Count",
@@ -337,7 +312,9 @@
             kill: "Kill",
             language: "Language",
             dropdowns: "Dropdowns",
-            tableRowCount: "Table Row Count"
+            tableRowCount: "Table Row Count",
+            nextTeam: "Next Team",
+            nextRound: "Next Round"
           },
           {
             languageTitle: "Español",
@@ -345,6 +322,8 @@
             day: "Día",
             night: "Noche",
             adversaries: "Adversarios",
+            createAdversaries: "Crear Adversarios",
+            createProtectiveForce: "Crear Fuerza Protectora",
             protectiveForce: "Fuerza protectora",
             createAdversariesCount: "Conteo Adversario",
             forceCount: "Recuento de fuerza protectora",
@@ -358,7 +337,9 @@
             kill: "Matar",
             language: "Idioma",
             dropdowns: "Listas deplegables",
-            tableRowCount: "Recuento de filas de tabla"
+            tableRowCount: "Recuento de filas de tabla",
+            nextTeam: "Equipo Siguiente",
+            nextRound: "Proxima Ronda"
           },
           {
             languageTitle: "عربى",
@@ -366,6 +347,8 @@
             day: "يوم",
             night: "ليل",
             adversaries: "الخصوم",
+            createAdversaries: "إنشاء خصوم",
+            createProtectiveForce: "إنشاء قوة واقية",
             protectiveForce: "قوة الحماية",
             createAdversariesCount: "عد الخصم",
             forceCount: "عدد قوة الحماية",
@@ -379,7 +362,9 @@
             kill: "قتل",
             language: "لغة",
             dropdowns: "هبوط قطرة",
-            tableRowCount: "جدول عدد الصفوف"
+            tableRowCount: "جدول عدد الصفوف",
+            nextTeam: "الفريق القادم",
+            nextRound: "الجولة التالية"
           }
         ]
       },
