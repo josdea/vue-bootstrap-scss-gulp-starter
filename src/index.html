@@ -68,11 +68,12 @@
     </div>
     <div v-if="adversaryStatus.length > 0 || pForceStatus.length > 0" class="progress mb-3">
       <div class="progress-bar bg-danger" role="progressbar" :style="'width: '+ adversaryProgress+'%'"
-        :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress.toFixed(2)}}%</div>
+        :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress.toFixed(2)}}% ({{adversaryStatus.filter(item => (item == 1 || item == 2)).length}})</div>
       <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
         :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">
-        {{(100- adversaryProgress).toFixed(2)}}%
+        {{(100- adversaryProgress).toFixed(2)}}% ({{pForceStatus.filter(item => (item == 1 || item == 2)).length}})
       </div>
+      <!-- <div class="progress-bar bg-warning" role="progressbar" :style="'width: '+ adversaryStatus.filter(item => (item == 2))+'%'" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div> -->
     </div>
     <!-- START CARDS ROW -->
     <div class="row ">
@@ -135,9 +136,9 @@
           <tr>
             <th scope="col" style="width: 10%" :title="labels[0].time">{{labels[currentLanguage].time}}</th>
             <th scope="col" style="width: 5%" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
-            <th scope="col" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
-            <th scope="col" style="width: 8%" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
-            <th scope="col" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
+            <th scope="col" style="width: 40%" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
+            <th scope="col" style="width: 5%" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
+            <th scope="col" style="width: 40%" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
           </tr>
         </thead>
         <tbody class="align-middle">
@@ -169,6 +170,7 @@
       </div>
     </div>
     <div>
+      <!-- TODO move language button to top and fix next team button -->
       <div id="options" class="text-right d-print-none">
         <div class="form-group row">
             <button v-if="adversaryStatus.length>0 && pForceStatus.length>0" v-on:click="createInterval(currentTeam)">
@@ -186,13 +188,12 @@
         </div>
       </div>
       <!-- <button v-on:click="createResultModal(0,0)">modal</button> -->
-      <!-- TODO table fill screen check printing -->
       <!-- BEGIN ACTION MODAL -->
       <div id="myModal" class="modal" tabindex="-1" role="dialog" ref="vuemodal">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-dialog-centered" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Create Action</h5>
+              <h5 class="modal-title">{{labels[currentLanguage].createAction}}</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -212,7 +213,7 @@
                 <div class="form-group">
                   <label class="sr-only" for="action">Action</label>
                   <input v-model="logTableSample[currentItemIndex].actions[currentActionIndex].action" id="action"
-                    name="action" list="mySuggestion" placeholder="Action" type="text" class="form-control">
+                    name="action" list="mySuggestion" :placeholder="labels[currentLanguage].action" type="text" class="form-control">
                   <datalist id="mySuggestion">
                     <option v-for="(action, index) in readUniqueActions">{{action}}</option>
                   </datalist>
@@ -222,18 +223,18 @@
                   <div>
                     <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].dice" id="dice"
                       name="dice" class="custom-select">
-                      <option value="" disabled>Dice</option>
+                      <option value="" disabled>{{labels[currentLanguage].dice}}</option>
                       <option v-for="x in 11" :value="x+1">{{x+1}}</option>
                     </select>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="" for="playerResults">Resulting Player(s) <small>Hold <kbd>ctrl</kbd> to select
+                  <label class="" for="playerResults">{{labels[currentLanguage].resultingPlayers}} <small>Hold <kbd>ctrl</kbd> to select
                       multiple</small></label>
                   <div>
                     <select v-if="adversaryStatus.length>0 && pForceStatus.length>0" multiple="multiple"
                       id="playerResults" name="playerResults" class="custom-select"
-                      v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultPlayer" size="3">
+                      v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultPlayer" size="5">
                       <option
                         v-for="(playerResult, index) in readPlayerStatusFromLog(logTableSample[currentItemIndex].actions[currentActionIndex].player, currentItemIndex, currentActionIndex)"
                         :value="playerResult">{{playerResult}}</option>
@@ -241,7 +242,7 @@
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="" for="resultaction">Resulting Outcome</label>
+                  <label class="" for="resultaction">{{labels[currentLanguage].resultingOutcome}}</label>
                   <div>
                     <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultOutcome"
                       id="resultaction" name="resultaction" class="custom-select">
@@ -254,9 +255,8 @@
               </form>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <!-- <button type="button" class="btn btn-primary">Update</button> -->
-              <!-- TODO next person -->
+                <button v-on:click="createResultsModalNextPlayer()" type="button" class="btn btn-success">Next Player</button>
+              <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">X</button> -->
             </div>
           </div>
         </div>
@@ -314,7 +314,12 @@
             dropdowns: "Dropdowns",
             tableRowCount: "Table Row Count",
             nextTeam: "Next Team",
-            nextRound: "Next Round"
+            nextRound: "Next Round",
+            createAction: "Create Action",
+            resultingOutcome: "Resulting Outcome",
+            resultingPlayers: "Resulting Player(s)",
+            nextPlayer: "Next Player"
+
           },
           {
             languageTitle: "Español",
@@ -324,7 +329,7 @@
             adversaries: "Adversarios",
             createAdversaries: "Crear Adversarios",
             createProtectiveForce: "Crear Fuerza Protectora",
-            protectiveForce: "Fuerza protectora",
+            protectiveForce: "Fuerza Protectora",
             createAdversariesCount: "Conteo Adversario",
             forceCount: "Recuento de fuerza protectora",
             time: "Hora",
@@ -339,7 +344,11 @@
             dropdowns: "Listas deplegables",
             tableRowCount: "Recuento de filas de tabla",
             nextTeam: "Equipo Siguiente",
-            nextRound: "Proxima Ronda"
+            nextRound: "Proxima Ronda",
+            createAction: "Crear Acción",
+            resultingOutcome: "Resultado Resultante",
+            resultingPlayers: "Jugadores Resultantes",
+            nextPlayer: "Próximo Jugador"
           },
           {
             languageTitle: "عربى",
@@ -364,7 +373,11 @@
             dropdowns: "هبوط قطرة",
             tableRowCount: "جدول عدد الصفوف",
             nextTeam: "الفريق القادم",
-            nextRound: "الجولة التالية"
+            nextRound: "الجولة التالية",
+            createAction: "خلق العمل",
+            resultingOutcome: "النتيجة الناتجة",
+            resultingPlayers: "نتيجة اللاعبين",
+            nextPlayer: "لاعب المقبل"
           }
         ]
       },
@@ -393,8 +406,6 @@
       methods: {
         modalHidden: function () {
           this.updatePlayerStatus()
-          // TODO add a next player button in modal
-          // TODO update player
         },
         updatePlayerStatus: function () {
           let playerType = ''
@@ -476,30 +487,26 @@
             });
           }
         },
-        // readPlayersForResults(currentTeam) {
-        //   currentTeam = currentTeam.charAt(0).toLowerCase()
-        //   let playerList = []
-        //   playerList.length = 0
-        //   if (currentTeam == 'a') {
-        //     this.pForceStatus.forEach((element, index) => {
-        //       // if (element == 1) {
-        //       playerList.push('P' + (index + 1))
-        //       // }
-        //     });
-        //   } else if (currentTeam == 'p') {
-        //     this.adversaryStatus.forEach((element, index) => {
-        //       // if (element == 1) {
-        //       playerList.push('A' + (index + 1))
-        //       // }
-        //     });
-        //   }
-        //   return playerList
-        // },
         createResultModal(itemIndex, actionIndex) {
           this.currentActionIndex = actionIndex
           this.currentItemIndex = itemIndex
-          // this.readPlayerStatusFromLog('a',5,5)
           $('#myModal').modal(options)
+        },
+        createResultsModalNextPlayer(){
+          this.modalHidden()
+          console.log("in here but")
+              let actionIndex = this.currentActionIndex
+              let itemIndex = this.currentItemIndex
+
+              if(actionIndex < this.logTableSample[itemIndex].actions.length-1){
+               console.log("shouldn't be here")
+              //  TODO do more error checking on this
+                this.createResultModal(itemIndex, actionIndex+1)
+              }else{
+                $('#myModal').modal('toggle')
+              }
+
+
         },
         readPlayerStatusFromLog(playerTeam, currentItemIndex, currentActionIndex) {
           playerTeam = playerTeam.charAt(0).toLowerCase()
