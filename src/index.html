@@ -12,6 +12,7 @@
     } */
     #app {
       padding-top: 1em;
+      /* display: none; */
     }
 
     div.person {
@@ -19,12 +20,16 @@
     }
 
     div #table {
-      max-height: 70%;
+      height: 50%;
       overflow-y: auto;
     }
 
     .progress {
       height: 20px;
+    }
+
+    #iemessage {
+      /* display: none; */
     }
 
     @media print {
@@ -37,34 +42,32 @@
 </head>
 
 <body class="h-100">
+  <p id="iemessage">I'm sorry but this application is not supported in Internet Explorer. Please use Chrome, Firefox,
+    Safari, or Edge.</p>
   <div class="container-fluid h-100 " id="app">
     <!-- TODO do we want a title? -->
     <!-- <h1 class="d-none d-print-block">Battleboard Dashboard Results</h1> -->
     <header>
-      <div class="row text-center">
-        <div class="col-8">
+      <div class="row text-center ">
+        <div class="col-6">
           <div class="form-group row">
-            <label class="col-2 col-form-label" for="scenario_name"
-              :title="labels[0].scenarioTitle">{{labels[currentLanguage].scenarioTitle}}</label>
-            <div class="col-10">
-              <input id="scenario_name" name="scenario_name" type="text" class="form-control">
+            <!-- <label class="col-2 col-form-label" for="scenario_name"
+              :title="labels[0].scenarioTitle">{{labels[currentLanguage].scenarioTitle}}</label> -->
+            <div class="col">
+              <input id="scenario_name" name="scenario_name" type="text" class="form-control" :placeholder="labels[currentLanguage].scenarioTitle">
             </div>
           </div>
         </div>
         <div class="col">
-          <div class="form-group row">
-            <div class="col">
-              <div class="custom-control custom-radio custom-control-inline">
-                <input name="day_night" id="day_night_0" type="radio" class="custom-control-input" value="day">
-                <label for="day_night_0" class="custom-control-label"
-                  :title="labels[0].day">{{labels[currentLanguage].day}}</label>
-              </div>
-              <div class="custom-control custom-radio custom-control-inline">
-                <input name="day_night" id="day_night_1" type="radio" class="custom-control-input" value="night">
-                <label for="day_night_1" class="custom-control-label"
-                  :title="labels[0].night">{{labels[currentLanguage].night}}</label>
-              </div>
-            </div>
+          <div class="form-check form-check-inline">
+            <input name="day_night" id="day_night_0" type="radio" class="form-check-input" value="day">
+            <label for="day_night_0" class="form-check-label"
+              :title="labels[0].day">{{labels[currentLanguage].day}}</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input name="day_night" id="day_night_1" type="radio" class="form-check-input" value="night">
+            <label for="day_night_1" class="form-check-label"
+              :title="labels[0].night">{{labels[currentLanguage].night}}</label>
           </div>
         </div>
         <div class="col d-print-none">
@@ -77,19 +80,27 @@
             </optgroup>
           </select>
         </div>
+        <div v-if="adversaryStatus.length>0 && pForceStatus.length>0" class="col">
+            <button 
+                :title="[currentTeam =='a' ? labels[0].nextRound : labels[0].nextTeam]" v-on:click="createInterval(currentTeam)"
+                :class="'btn ' + [(currentTeam == 'a') ? 'btn-danger' : 'btn-primary']" type="button">
+                {{(currentTeam =='a' ? labels[currentLanguage].nextRound : labels[currentLanguage].nextTeam)}}</button>
+           
+        </div>
       </div>
       <div v-if="adversaryStatus.length > 0 || pForceStatus.length > 0" class="progress mb-3">
-      <div class="progress-bar bg-danger" role="progressbar" :style="'width: '+ adversaryProgress+'%'"
-        :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress.toFixed(2)}}% ({{adversaryStatus.filter(item => (item == 1 || item == 2)).length}})</div>
-      <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
-        :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">
-        {{(100- adversaryProgress).toFixed(2)}}% ({{pForceStatus.filter(item => (item == 1 || item == 2)).length}})
+        <div class="progress-bar bg-danger" role="progressbar" :style="'width: '+ adversaryProgress+'%'"
+          :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress.toFixed(2)}}%
+          ({{adversaryStatus.filter(item => (item == 1 || item == 2)).length}})</div>
+        <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
+          :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">
+          {{(100- adversaryProgress).toFixed(2)}}% ({{pForceStatus.filter(item => (item == 1 || item == 2)).length}})
+        </div>
       </div>
-    </div>
       <!-- START CARDS ROW -->
       <div class="card-deck pb-3 text-center">
         <div class="card ">
-          <div class="card-body">
+          <div class="card-body p-2">
             <h5 v-if="adversaryStatus.length>0" class="card-title" :title="labels[0].adversaries">
               {{labels[currentLanguage].adversaries}}</h5>
             <form @submit.prevent v-if="adversaryStatus.length == 0" class="form-inline justify-content-center">
@@ -115,17 +126,19 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-body">
+          <div class="card-body p-2">
             <h5 v-if="pForceStatus.length>0" class="card-title" :title="labels[0].protectiveForce">
               {{labels[currentLanguage].protectiveForce}}</h5>
             <form @submit.prevent v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
               <label class="sr-only" for="forceCount"
                 :title="labels[0].forceCount">{{labels[currentLanguage].forceCount}}</label>
               <input v-model="forceCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
-                class="form-control mb-2 mr-sm-2" id="forceCount">
-              <button v-on:click="createPlayers('p')" type="button" class="btn btn-primary mb-2"
+                class="form-control mb-2 mr-sm-2" id="forceCount" data-placement="bottom" data-toggle="popover"
+                data-trigger="focus" data-content="Please create protective force before adding actions.">
+              <a id="poptest" tabindex="0" v-on:click="createPlayers('p')" href="#" role="button"
+                class="btn btn-primary mb-2"
                 :title="labels[0].createProtectiveForce + ': ' + forceCount">{{labels[currentLanguage].createProtectiveForce}}:
-                {{forceCount}}</button>
+                {{forceCount}}</a>
             </form>
             <div class="row">
               <div v-for="(item, index) in pForceStatus" class="col-sm-2 text-left lead">
@@ -154,7 +167,7 @@
             <th scope="col" style="width: 40%" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
           </tr>
         </thead>
-        <tbody class="align-middle">
+        <tbody v-if="pForceStatus.length > 0 && adversaryStatus.length>0" class="align-middle">
           <template v-for="(item, index) in logTableSample">
             <tr v-on:click="createResultModal(index,indexaction)" v-for="(action, indexaction) in item.actions">
               <th v-if="indexaction==0" class="time " scope="rowgroup" :rowspan="(item.actions.length)"
@@ -181,12 +194,12 @@
         </tbody>
       </table>
     </div>
-    <footer class="d-print-none d-flex justify-content-end">
+    <!-- <footer class="d-print-none d-flex justify-content-end">
       <button v-if="adversaryStatus.length>0 && pForceStatus.length>0"
         :title="[currentTeam =='a' ? labels[0].nextRound : labels[0].nextTeam]" v-on:click="createInterval(currentTeam)"
         :class="'btn ' + [(currentTeam == 'a') ? 'btn-danger' : 'btn-primary']" type="button">
         {{(currentTeam =='a' ? labels[currentLanguage].nextRound : labels[currentLanguage].nextTeam)}}</button>
-    </footer>
+    </footer> -->
     <!-- BEGIN ACTION MODAL -->
     <div id="myModal" class="modal" tabindex="-1" role="dialog" ref="vuemodal">
       <div class="modal-dialog modal-dialog-centered" role="document">
@@ -254,9 +267,12 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button v-on:click="createResultsModalNextPlayer()" type="button" class="btn btn-secondary"
-              :title="labels[0].nextPlayer">{{labels[currentLanguage].nextPlayer}}</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Return</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Return <i
+                class="fas fa-table"></i></button>
+            <button v-if="" v-on:click="createResultsModalNextPlayer()" type="button" class="btn btn-secondary"
+              :title="labels[0].nextPlayer">{{labels[currentLanguage].nextPlayer}} <i
+                class="fas fa-chevron-right"></i></button>
+
           </div>
         </div>
       </div>
@@ -266,16 +282,37 @@
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
     integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
   </script>
-  <!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
-  </script> -->
+  </script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
     integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
   </script>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
   <script>
-
-
+    //detecting if Internet Explorer
+    if (Array.prototype.fill) {
+      //Is not IE
+      isIE = false;
+      var x = document.getElementById("iemessage");
+      if (x.style.display == "none") {
+        x.style.display = "block";
+      } else {
+        x.style.display = "none";
+      }
+    } else {
+      //  Is IE
+      isIE = true
+      var y = document.getElementById("app");
+      if (y.style.display == "none") {
+        y.style.display = "block";
+      } else {
+        y.style.display = "none";
+      }
+    }
+  </script>
+  <script>
     var app = new Vue({
       el: "#app",
       data: {
@@ -396,7 +433,8 @@
           let actions = []
           this.logTableSample.forEach(interval => {
             interval.actions.forEach(action => {
-              if (actions.indexOf(action.action) < 0) {
+              if (actions.indexOf(action.action) < 0 && action.action != this.logTableSample[this
+                  .currentItemIndex].actions[this.currentActionIndex].action) {
                 actions.push(action.action)
               }
             });
