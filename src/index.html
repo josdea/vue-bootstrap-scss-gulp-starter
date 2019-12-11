@@ -80,8 +80,8 @@
             </optgroup>
           </select>
         </div>
-        <div v-if="adversaryStatus.length>0 && pForceStatus.length>0" class="col">
-            <button 
+        <div  class="col">
+            <button v-if="adversaryStatus.length>0 && pForceStatus.length>0" 
                 :title="[currentTeam =='a' ? labels[0].nextRound : labels[0].nextTeam]" v-on:click="createInterval(currentTeam)"
                 :class="'btn ' + [(currentTeam == 'a') ? 'btn-danger' : 'btn-primary']" type="button">
                 {{(currentTeam =='a' ? labels[currentLanguage].nextRound : labels[currentLanguage].nextTeam)}}</button>
@@ -106,7 +106,7 @@
             <form @submit.prevent v-if="adversaryStatus.length == 0" class="form-inline justify-content-center">
               <label class="sr-only" for="createAdversariesCount"
                 :title="labels[0].createAdversariesCount">{{labels[currentLanguage].createAdversariesCount}}</label>
-              <input v-model="createAdversariesCount" name="adversary_count" type="number" min="1" :max="personMax"
+              <input v-model="createAdversariesCount" name="adversary_count" type="number" min="1" max="100"
                 step="1" class="form-control mb-2 mr-sm-2" id="createAdversariesCount">
               <button v-on:click="createPlayers('a')" type="button" class="btn btn-danger mb-2"
                 :title="labels[0].createAdversaries + ': ' + createAdversariesCount">{{labels[currentLanguage].createAdversaries}}:
@@ -116,7 +116,8 @@
               <div v-for="(item, index) in adversaryStatus" class="col-sm-2 text-left lead">
                 <div>
                   <i v-if="item==1" class="fas fa-user-secret fa-lg text-danger"></i>
-                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-warning"></i>
+                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-success"></i>
+                  <i v-if="item == 3" class="fas fa-procedures fa-lg text-warning"></i>
                   <i v-if="item == 0" class="fas fa-user-slash fa-md text-secondary"></i>
                   <span class="text-dark">
                     A{{index+1}}</span>
@@ -132,7 +133,7 @@
             <form @submit.prevent v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
               <label class="sr-only" for="forceCount"
                 :title="labels[0].forceCount">{{labels[currentLanguage].forceCount}}</label>
-              <input v-model="forceCount" name="adversary_count" type="number" min="1" :max="personMax" step="1"
+              <input v-model="forceCount" name="adversary_count" type="number" min="1" max="100" step="1"
                 class="form-control mb-2 mr-sm-2" id="forceCount" data-placement="bottom" data-toggle="popover"
                 data-trigger="focus" data-content="Please create protective force before adding actions.">
               <a id="poptest" tabindex="0" v-on:click="createPlayers('p')" href="#" role="button"
@@ -144,7 +145,8 @@
               <div v-for="(item, index) in pForceStatus" class="col-sm-2 text-left lead">
                 <div>
                   <i v-if="item == 1" class="fas fa-user-tie fa-lg text-primary"></i>
-                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-warning"></i>
+                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-success"></i>
+                  <i v-if="item == 3" class="fas fa-procedures fa-lg text-warning"></i>
                   <i v-if="item == 0" class="fas fa-user-slash fa-md text-secondary"></i>
                   <span class="text-dark">
                     P{{index+1}}</span>
@@ -187,7 +189,7 @@
               </td>
               <td class="result align-middle">
                 {{item.actions[indexaction].resultPlayer.toString()}}
-                {{item.actions[indexaction].resultOutcome}}
+                {{labels[currentLanguage].playerOutcomes[item.actions[indexaction].resultOutcome]}}
               </td>
             </tr>
           </template>
@@ -258,9 +260,10 @@
                 <div>
                   <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultOutcome"
                     id="resultaction" name="resultaction" class="custom-select">
-                    <option :value="labels[currentLanguage].miss">{{labels[currentLanguage].miss}}</option>
-                    <option :value="labels[currentLanguage].wounded">{{labels[currentLanguage].wounded}}</option>
-                    <option :value="labels[currentLanguage].kill">{{labels[currentLanguage].kill}}</option>
+                    <option value="1">{{labels[currentLanguage].playerOutcomes[1]}}</option>
+                    <option value="2">{{labels[currentLanguage].playerOutcomes[2]}}</option>
+                    <option value="3">{{labels[currentLanguage].playerOutcomes[3]}}</option>
+                    <option value="0">{{labels[currentLanguage].playerOutcomes[0]}}</option>
                   </select>
                 </div>
               </div>
@@ -290,8 +293,8 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
+<!-- detecting if Internet Explorer -->
   <script>
-    //detecting if Internet Explorer
     if (Array.prototype.fill) {
       //Is not IE
       isIE = false;
@@ -323,14 +326,14 @@
         currentIntervalStart: 0,
         intervalDuraction: 30,
         logTableSample: [],
-        playerOutcomes: ['Kill', 'Miss', 'Wound'], //0 kill, 1 miss, 2 wound
+        // playerOutcomes: ['Kill', 'Miss', 'Wound'], //0 kill, 1 miss, 2 wound  TODO wounded - active and wounded disable use green color and yellow <i class="fas fa-procedures"></i>
         currentLanguage: 0, // 0 for English in labels array
         createAdversariesCount: 8,
         forceCount: 8,
-        personMax: 100,
         adversaryStatus: [],
         pForceStatus: [],
         labels: [{
+            playerOutcomes: ['Kill', 'Miss', 'Wounded (active)', 'Wounded (disabled)'],
             languageTitle: "English",
             scenarioTitle: "Scenario",
             day: "Day",
@@ -361,6 +364,7 @@
             selectTableRow: "Select any table row to enter that player's actions"
           },
           {
+            playerOutcomes: ['Matar', 'Pierda', 'Herido (activo)', 'Herido (deshabilitado)'],
             languageTitle: "Español",
             scenarioTitle: "Guión",
             day: "Día",
@@ -391,6 +395,7 @@
             selectTableRow: "Seleccione cualquier fila de la mesa para ingresar las acciones de ese jugador"
           },
           {
+            playerOutcomes: ["قتل", "يغيب", "(جرحى (نشط", "(جرحى (معطل"],
             languageTitle: "عربى",
             scenarioTitle: "سيناريو",
             day: "يوم",
@@ -454,13 +459,13 @@
           let playerNumber = ''
           let playerOutcome = this.logTableSample[this.currentItemIndex].actions[this.currentActionIndex]
             .resultOutcome
-          if (playerOutcome.toLowerCase() == this.playerOutcomes[0].toLowerCase()) {
-            playerOutcome = 0
-          } else if (playerOutcome.toLowerCase() == this.playerOutcomes[2].toLowerCase()) {
-            playerOutcome = 2
-          } else {
-            playerOutcome = 1
-          }
+          // if (playerOutcome.toLowerCase() == this.playerOutcomes[0].toLowerCase()) {
+            // playerOutcome = 0
+          // } else if (playerOutcome.toLowerCase() == this.playerOutcomes[2].toLowerCase()) {
+            // playerOutcome = 2
+          // } else {
+            // playerOutcome = 1
+          // }
           this.logTableSample[this.currentItemIndex].actions[this.currentActionIndex].resultPlayer.forEach(
             element => {
               playerType = element.substring(0, 1).toLowerCase()
@@ -486,7 +491,7 @@
           if (playertype == 'a') {
             this.currentTeam = 'p'
             this.adversaryStatus.forEach((element, index) => {
-              if (element == 1) {
+              if (element == 1 || element == 2) {
                 tempActions.push({
                   player: 'A' + (index + 1),
                   action: '',
@@ -505,7 +510,7 @@
           } else if (playertype == 'p') {
             this.currentTeam = 'a'
             this.pForceStatus.forEach((element, index) => {
-              if (element != 0) {
+              if (element == 1 || element == 2) {
                 this.logTableSample[this.logTableSample.length - 1].actions.push({
                   player: 'P' + (index + 1),
                   action: '',
@@ -548,13 +553,13 @@
             for (let n = 0; n < currentActionIndex; n++) {
               element = this.logTableSample[i].actions[n]
               playerOutcome = element.resultOutcome
-              if (playerOutcome.toLowerCase() == this.playerOutcomes[0].toLowerCase()) {
-                playerOutcome = 0
-              } else if (playerOutcome.toLowerCase() == this.playerOutcomes[2].toLowerCase()) {
-                playerOutcome = 2
-              } else {
-                playerOutcome = 1
-              }
+              // if (playerOutcome.toLowerCase() == this.playerOutcomes[0].toLowerCase()) {
+                // playerOutcome = 0
+              // } else if (playerOutcome.toLowerCase() == this.playerOutcomes[2].toLowerCase()) {
+                // playerOutcome = 2
+              // } else {
+                // playerOutcome = 1
+              // }
               element.resultPlayer.forEach(a => {
                 playerType = a.substring(0, 1).toLowerCase()
                 playerNumber = a.substring(1)
