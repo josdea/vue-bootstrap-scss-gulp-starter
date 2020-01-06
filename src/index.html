@@ -1,596 +1,65 @@
 <!DOCTYPE html>
-<html lang="en" class="h-100">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <title>Tabletop Form</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
-  <style>
-    /* * {
-      border: .5px solid pink;
-    } */
-    #app {
-      padding-top: 1em;
-      /* display: none; */
-    }
-
-    div.person {
-      padding: 6px 0px;
-    }
-
-    div #table {
-      height: 50%;
-      overflow-y: auto;
-    }
-
-    .progress {
-      height: 20px;
-    }
-
-    #iemessage {
-      /* display: none; */
-    }
-
-    @media print {
-      div #table {
-        height: auto;
-        overflow-y: none;
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>TODO Title</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 
-<body class="h-100">
-  <p id="iemessage">I'm sorry but this application is not supported in Internet Explorer. Please use Chrome, Firefox,
-    Safari, or Edge.</p>
-  <div class="container-fluid h-100 " id="app">
-    <!-- TODO do we want a title? -->
-    <!-- <h1 class="d-none d-print-block">Battleboard Dashboard Results</h1> -->
-    <header>
-      <div class="row text-center ">
-        <div class="col-6">
-          <div class="form-group row">
-            <!-- <label class="col-2 col-form-label" for="scenario_name"
-              :title="labels[0].scenarioTitle">{{labels[currentLanguage].scenarioTitle}}</label> -->
-            <div class="col">
-              <input id="scenario_name" name="scenario_name" type="text" class="form-control" :placeholder="labels[currentLanguage].scenarioTitle">
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="form-check form-check-inline">
-            <input name="day_night" id="day_night_0" type="radio" class="form-check-input" value="day">
-            <label for="day_night_0" class="form-check-label"
-              :title="labels[0].day">{{labels[currentLanguage].day}}</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input name="day_night" id="day_night_1" type="radio" class="form-check-input" value="night">
-            <label for="day_night_1" class="form-check-label"
-              :title="labels[0].night">{{labels[currentLanguage].night}}</label>
-          </div>
-        </div>
-        <div class="col d-print-none">
-          <label for="lang" class="sr-only" :title="labels[0].language">{{labels[currentLanguage].language}}
-          </label>
-          <select id="lang" name="language" class="custom-select" v-model="currentLanguage">
-            <optgroup :label="labels[currentLanguage].language">
-              <option v-for="(item, index) in labels" :value="index" :title="labels[0].languageTitle">
-                {{item.languageTitle}}</option>
-            </optgroup>
-          </select>
-        </div>
-        <div  class="col">
-            <button v-if="adversaryStatus.length>0 && pForceStatus.length>0" 
-                :title="[currentTeam =='a' ? labels[0].nextRound : labels[0].nextTeam]" v-on:click="createInterval(currentTeam)"
-                :class="'btn ' + [(currentTeam == 'a') ? 'btn-danger' : 'btn-primary']" type="button">
-                {{(currentTeam =='a' ? labels[currentLanguage].nextRound : labels[currentLanguage].nextTeam)}}</button>
-           
-        </div>
-      </div>
-      <div v-if="adversaryStatus.length > 0 || pForceStatus.length > 0" class="progress mb-3">
-        <div class="progress-bar bg-danger" role="progressbar" :style="'width: '+ adversaryProgress+'%'"
-          :aria-valuenow="adversaryProgress" aria-valuemin="0" aria-valuemax="100">{{adversaryProgress.toFixed(2)}}%
-          ({{adversaryStatus.filter(item => (item == 1 || item == 2)).length}})</div>
-        <div class="progress-bar bg-primary" role="progressbar" :style="'width: '+ (100- adversaryProgress)+'%'"
-          :aria-valuenow="(100- adversaryProgress)" aria-valuemin="0" aria-valuemax="100">
-          {{(100- adversaryProgress).toFixed(2)}}% ({{pForceStatus.filter(item => (item == 1 || item == 2)).length}})
-        </div>
-      </div>
-      <!-- START CARDS ROW -->
-      <div class="card-deck pb-3 text-center">
-        <div class="card ">
-          <div class="card-body p-2">
-            <h5 v-if="adversaryStatus.length>0" class="card-title" :title="labels[0].adversaries">
-              {{labels[currentLanguage].adversaries}}</h5>
-            <form @submit.prevent v-if="adversaryStatus.length == 0" class="form-inline justify-content-center">
-              <label class="sr-only" for="createAdversariesCount"
-                :title="labels[0].createAdversariesCount">{{labels[currentLanguage].createAdversariesCount}}</label>
-              <input v-model="createAdversariesCount" name="adversary_count" type="number" min="1" max="100"
-                step="1" class="form-control mb-2 mr-sm-2" id="createAdversariesCount">
-              <button v-on:click="createPlayers('a')" type="button" class="btn btn-danger mb-2"
-                :title="labels[0].createAdversaries + ': ' + createAdversariesCount">{{labels[currentLanguage].createAdversaries}}:
-                {{createAdversariesCount}}</button>
-            </form>
-            <div class="row">
-              <div v-for="(item, index) in adversaryStatus" class="col-sm-2 text-left lead">
-                <div>
-                  <i v-if="item==1" class="fas fa-user-secret fa-lg text-danger"></i>
-                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-success"></i>
-                  <i v-if="item == 3" class="fas fa-procedures fa-lg text-warning"></i>
-                  <i v-if="item == 0" class="fas fa-user-slash fa-md text-secondary"></i>
-                  <span class="text-dark">
-                    A{{index+1}}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body p-2">
-            <h5 v-if="pForceStatus.length>0" class="card-title" :title="labels[0].protectiveForce">
-              {{labels[currentLanguage].protectiveForce}}</h5>
-            <form @submit.prevent v-if="pForceStatus.length == 0" class="form-inline  justify-content-center">
-              <label class="sr-only" for="forceCount"
-                :title="labels[0].forceCount">{{labels[currentLanguage].forceCount}}</label>
-              <input v-model="forceCount" name="adversary_count" type="number" min="1" max="100" step="1"
-                class="form-control mb-2 mr-sm-2" id="forceCount" data-placement="bottom" data-toggle="popover"
-                data-trigger="focus" data-content="Please create protective force before adding actions.">
-              <a id="poptest" tabindex="0" v-on:click="createPlayers('p')" href="#" role="button"
-                class="btn btn-primary mb-2"
-                :title="labels[0].createProtectiveForce + ': ' + forceCount">{{labels[currentLanguage].createProtectiveForce}}:
-                {{forceCount}}</a>
-            </form>
-            <div class="row">
-              <div v-for="(item, index) in pForceStatus" class="col-sm-2 text-left lead">
-                <div>
-                  <i v-if="item == 1" class="fas fa-user-tie fa-lg text-primary"></i>
-                  <i v-if="item == 2" class="fas fa-user-injured fa-lg text-success"></i>
-                  <i v-if="item == 3" class="fas fa-procedures fa-lg text-warning"></i>
-                  <i v-if="item == 0" class="fas fa-user-slash fa-md text-secondary"></i>
-                  <span class="text-dark">
-                    P{{index+1}}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-    <!-- BEGIN LOG TABLE -->
-    <div id="table" class="mb-3">
-      <table id="log" class="table table-bordered text-center">
-        <thead class="thead-dark">
-          <tr>
-            <th scope="col" style="width: 10%" :title="labels[0].time">{{labels[currentLanguage].time}}</th>
-            <th scope="col" style="width: 5%" :title="labels[0].player">{{labels[currentLanguage].player}}</th>
-            <th scope="col" style="width: 40%" :title="labels[0].action">{{labels[currentLanguage].action}}</th>
-            <th scope="col" style="width: 5%" :title="labels[0].dice">{{labels[currentLanguage].dice}}</th>
-            <th scope="col" style="width: 40%" :title="labels[0].result">{{labels[currentLanguage].result}}</th>
-          </tr>
-        </thead>
-        <tbody v-if="pForceStatus.length > 0 && adversaryStatus.length>0" class="align-middle">
-          <template v-for="(item, index) in logTableSample">
-            <tr v-on:click="createResultModal(index,indexaction)" v-for="(action, indexaction) in item.actions">
-              <th v-if="indexaction==0" class="time " scope="rowgroup" :rowspan="(item.actions.length)"
-                :title="item.interval">
-                {{item.interval}}
-              </th>
-              <td class="player align-middle">
-                {{item.actions[indexaction].player}}
-              </td>
-              <td class="action align-middle">
-                {{item.actions[indexaction].action}}
-                <span v-if="directions && indexaction == 0" class="font-weight-lighter font-italic"
-                  :title="labels[0].selectTableRow">{{labels[currentLanguage].selectTableRow}}</span>
-              </td>
-              <td class="dice align-middle">
-                {{item.actions[indexaction].dice}}
-              </td>
-              <td class="result align-middle">
-                {{item.actions[indexaction].resultPlayer.toString()}}
-                {{labels[currentLanguage].playerOutcomes[item.actions[indexaction].resultOutcome]}}
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </div>
-    <!-- <footer class="d-print-none d-flex justify-content-end">
-      <button v-if="adversaryStatus.length>0 && pForceStatus.length>0"
-        :title="[currentTeam =='a' ? labels[0].nextRound : labels[0].nextTeam]" v-on:click="createInterval(currentTeam)"
-        :class="'btn ' + [(currentTeam == 'a') ? 'btn-danger' : 'btn-primary']" type="button">
-        {{(currentTeam =='a' ? labels[currentLanguage].nextRound : labels[currentLanguage].nextTeam)}}</button>
-    </footer> -->
-    <!-- BEGIN ACTION MODAL -->
-    <div id="myModal" class="modal" tabindex="-1" role="dialog" ref="vuemodal">
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" :title="labels[0].createAction">{{labels[currentLanguage].createAction}}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div v-if="currentActionIndex!=-1 && currentItemIndex!=-1" class="modal-body">
-            <form>
-              <div class="form-group">
-                <label class="sr-only" for="timeinterval">{{labels[currentLanguage].time}}</label>
-                <input v-model="logTableSample[currentItemIndex].interval" readonly id="timeinterval"
-                  name="timeinterval" placeholder="Time Interval" type="text" class="form-control">
-              </div>
-              <div class="form-group">
-                <label class="sr-only" for="player">{{labels[currentLanguage].player}}</label>
-                <input v-model="logTableSample[currentItemIndex].actions[currentActionIndex].player" readonly
-                  id="player" name="player" placeholder="Player" type="text" class="form-control">
-              </div>
-              <div class="form-group">
-                <label class="sr-only" for="action">{{labels[currentLanguage].action}}</label>
-                <input v-model="logTableSample[currentItemIndex].actions[currentActionIndex].action" id="action"
-                  name="action" list="mySuggestion" :placeholder="labels[currentLanguage].action" type="text"
-                  class="form-control">
-                <datalist id="mySuggestion">
-                  <option v-for="(action, index) in readUniqueActions">{{action}}</option>
-                </datalist>
-              </div>
-              <div class="form-group" :title="labels[0].dice">
-                <label class="sr-only" for="dice">Dice</label>
-                <div>
-                  <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].dice" id="dice"
-                    name="dice" class="custom-select">
-                    <option value="" disabled>{{labels[currentLanguage].dice}}</option>
-                    <option v-for="x in 11" :value="x+1">{{x+1}}</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" :title="labels[0].resultingPlayers">
-                <label class="" for="playerResults">{{labels[currentLanguage].resultingPlayers}} <small>Hold
-                    <kbd>ctrl</kbd> to select
-                    multiple</small></label>
-                <select v-if="adversaryStatus.length>0 && pForceStatus.length>0" multiple="multiple" id="playerResults"
-                  name="playerResults" class="custom-select"
-                  v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultPlayer" size="5">
-                  <option
-                    v-for="(playerResult, index) in readPlayerStatusFromLog(logTableSample[currentItemIndex].actions[currentActionIndex].player, currentItemIndex, currentActionIndex)"
-                    :value="playerResult">{{playerResult}}</option>
-                </select>
-              </div>
-              <div class="form-group" :title="labels[0].resultingOutcome">
-                <label class="" for="resultaction">{{labels[currentLanguage].resultingOutcome}}</label>
-                <div>
-                  <select v-model="logTableSample[currentItemIndex].actions[currentActionIndex].resultOutcome"
-                    id="resultaction" name="resultaction" class="custom-select">
-                    <option value="1">{{labels[currentLanguage].playerOutcomes[1]}}</option>
-                    <option value="2">{{labels[currentLanguage].playerOutcomes[2]}}</option>
-                    <option value="3">{{labels[currentLanguage].playerOutcomes[3]}}</option>
-                    <option value="0">{{labels[currentLanguage].playerOutcomes[0]}}</option>
-                  </select>
-                </div>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Return <i
-                class="fas fa-table"></i></button>
-            <button v-if="" v-on:click="createResultsModalNextPlayer()" type="button" class="btn btn-secondary"
-              :title="labels[0].nextPlayer">{{labels[currentLanguage].nextPlayer}} <i
-                class="fas fa-chevron-right"></i></button>
-
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- END OF MODAL -->
+<body>
+  <div id="app" class="container">
+    <h1>heading</h1>
+    {{ message }} <br> {{reversedMessage}}
+    <ol>
+      <li is="todo-item" v-for="(item, index) in items" :index="index" :key="item.id" :todo="item"></li>
+    </ol>
+    <todo-item :todo="{message:'test item',id:4}" :index="'0'"></todo-item>
   </div>
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
-  </script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
-<!-- detecting if Internet Explorer -->
   <script>
-    if (Array.prototype.fill) {
-      //Is not IE
-      isIE = false;
-      var x = document.getElementById("iemessage");
-      if (x.style.display == "none") {
-        x.style.display = "block";
-      } else {
-        x.style.display = "none";
-      }
-    } else {
-      //  Is IE
-      isIE = true
-      var y = document.getElementById("app");
-      if (y.style.display == "none") {
-        y.style.display = "block";
-      } else {
-        y.style.display = "none";
-      }
-    }
-  </script>
-  <script>
+    Vue.component('todo-item', {
+      props: ['todo', 'index'],
+      template: '<li>This is a todo - Key:{{todo.id}} | Index:{{index}} {{todo.message}}</li>'
+    });
+
     var app = new Vue({
-      el: "#app",
+      el: '#app',
       data: {
-        directions: true,
-        currentTeam: 'a', //todo perhaps detect from array log
-        currentActionIndex: -1, //for modal 
-        currentItemIndex: -1, //for modal
-        currentIntervalStart: 0,
-        intervalDuraction: 30,
-        logTableSample: [],
-        // playerOutcomes: ['Kill', 'Miss', 'Wound'], //0 kill, 1 miss, 2 wound  TODO wounded - active and wounded disable use green color and yellow <i class="fas fa-procedures"></i>
-        currentLanguage: 0, // 0 for English in labels array
-        createAdversariesCount: 8,
-        forceCount: 8,
-        adversaryStatus: [],
-        pForceStatus: [],
-        labels: [{
-            playerOutcomes: ['Kill', 'Miss', 'Wounded (active)', 'Wounded (disabled)'],
-            languageTitle: "English",
-            scenarioTitle: "Scenario",
-            day: "Day",
-            night: "Night",
-            adversaries: "Adversaries",
-            createAdversaries: "Create Adversaries",
-            createProtectiveForce: "Create Protective Force",
-            protectiveForce: "Protective Force",
-            createAdversariesCount: "Adversary Count",
-            forceCount: "Protective Force Count",
-            time: "Time",
-            dice: "Dice",
-            player: "Player",
-            action: "Action",
-            result: "Result",
-            miss: "Miss",
-            wounded: "Wound",
-            kill: "Kill",
-            language: "Language",
-            dropdowns: "Dropdowns",
-            tableRowCount: "Table Row Count",
-            nextTeam: "Next Team",
-            nextRound: "Next Round",
-            createAction: "Create Action",
-            resultingOutcome: "Resulting Outcome",
-            resultingPlayers: "Resulting Player(s)",
-            nextPlayer: "Next Player",
-            selectTableRow: "Select any table row to enter that player's actions"
+        message: 'Hello Vue!',
+        items: [{
+            id: 1,
+            message: 'Foo'
           },
           {
-            playerOutcomes: ['Matar', 'Pierda', 'Herido (activo)', 'Herido (deshabilitado)'],
-            languageTitle: "Español",
-            scenarioTitle: "Guión",
-            day: "Día",
-            night: "Noche",
-            adversaries: "Adversarios",
-            createAdversaries: "Crear Adversarios",
-            createProtectiveForce: "Crear Fuerza Protectora",
-            protectiveForce: "Fuerza Protectora",
-            createAdversariesCount: "Conteo Adversario",
-            forceCount: "Recuento de fuerza protectora",
-            time: "Hora",
-            dice: "Dado",
-            player: "Jugador",
-            action: "Acción",
-            result: "Resultado",
-            miss: "Pierda",
-            wounded: "Herida",
-            kill: "Matar",
-            language: "Idioma",
-            dropdowns: "Listas deplegables",
-            tableRowCount: "Recuento de filas de tabla",
-            nextTeam: "Equipo Siguiente",
-            nextRound: "Proxima Ronda",
-            createAction: "Crear Acción",
-            resultingOutcome: "Resultado Resultante",
-            resultingPlayers: "Jugadores Resultantes",
-            nextPlayer: "Próximo Jugador",
-            selectTableRow: "Seleccione cualquier fila de la mesa para ingresar las acciones de ese jugador"
-          },
-          {
-            playerOutcomes: ["قتل", "يغيب", "(جرحى (نشط", "(جرحى (معطل"],
-            languageTitle: "عربى",
-            scenarioTitle: "سيناريو",
-            day: "يوم",
-            night: "ليل",
-            adversaries: "الخصوم",
-            createAdversaries: "إنشاء خصوم",
-            createProtectiveForce: "إنشاء قوة واقية",
-            protectiveForce: "قوة الحماية",
-            createAdversariesCount: "عد الخصم",
-            forceCount: "عدد قوة الحماية",
-            time: "زمن",
-            dice: "حجر النرد",
-            player: "لاعب",
-            action: "عمل",
-            result: "نتيجة",
-            miss: "يغيب",
-            wounded: "جرح",
-            kill: "قتل",
-            language: "لغة",
-            dropdowns: "هبوط قطرة",
-            tableRowCount: "جدول عدد الصفوف",
-            nextTeam: "الفريق القادم",
-            nextRound: "الجولة التالية",
-            createAction: "خلق العمل",
-            resultingOutcome: "النتيجة الناتجة",
-            resultingPlayers: "نتيجة اللاعبين",
-            nextPlayer: "لاعب المقبل",
-            selectTableRow: "حدد أي صف جدول لإدخال تصرفات هذا اللاعب"
+            id: 2,
+            message: 'Bar'
           }
         ]
       },
-      computed: {
-        adversaryProgress: function () {
-          // TODO change bar based on wounded. can wounded be disabled?
-          let aAlive = this.adversaryStatus.filter(item => (item == 1 || item == 2));
-          let pfAlive = this.pForceStatus.filter(item => (item == 1 || item == 2));
-          return aAlive.length / (aAlive.length + pfAlive.length) * 100
-        },
-        readUniqueActions: function () {
-          let actions = []
-          this.logTableSample.forEach(interval => {
-            interval.actions.forEach(action => {
-              if (actions.indexOf(action.action) < 0 && action.action != this.logTableSample[this
-                  .currentItemIndex].actions[this.currentActionIndex].action) {
-                actions.push(action.action)
-              }
-            });
-          });
-          return actions
-        },
+      created: function () {
+        console.log("Created")
       },
-      mounted: function () {
-        $(this.$refs.vuemodal).on("hidden.bs.modal", this.modalHidden)
+      computed: {
+        reversedMessage: function () {
+          return this.message.split('').reverse().join('')
+        }
       },
       methods: {
-        modalHidden: function () {
-          this.updatePlayerStatus()
-        },
-        updatePlayerStatus: function () {
-          let playerType = ''
-          let playerNumber = ''
-          let playerOutcome = this.logTableSample[this.currentItemIndex].actions[this.currentActionIndex]
-            .resultOutcome
-          // if (playerOutcome.toLowerCase() == this.playerOutcomes[0].toLowerCase()) {
-            // playerOutcome = 0
-          // } else if (playerOutcome.toLowerCase() == this.playerOutcomes[2].toLowerCase()) {
-            // playerOutcome = 2
-          // } else {
-            // playerOutcome = 1
-          // }
-          this.logTableSample[this.currentItemIndex].actions[this.currentActionIndex].resultPlayer.forEach(
-            element => {
-              playerType = element.substring(0, 1).toLowerCase()
-              playerNumber = element.substring(1)
-              if (playerType == 'a' && this.adversaryStatus[playerNumber - 1] != 0) {
-                this.adversaryStatus.splice(playerNumber - 1, 1, playerOutcome)
-              } else if (playerType == 'p' && this.pForceStatus[playerNumber] != 0) {
-                this.pForceStatus.splice(playerNumber - 1, 1, playerOutcome)
-              }
-            });
-        },
-        createPlayers: function (playerType) {
-          if (playerType == 'a') {
-            this.adversaryStatus = new Array(Number(this.createAdversariesCount)).fill(1);
-            this.createInterval('a')
-          }
-          if (playerType == 'p') {
-            this.pForceStatus = new Array(Number(this.forceCount)).fill(1);
-          }
-        },
-        createInterval: function (playertype) {
-          let tempActions = []
-          if (playertype == 'a') {
-            this.currentTeam = 'p'
-            this.adversaryStatus.forEach((element, index) => {
-              if (element == 1 || element == 2) {
-                tempActions.push({
-                  player: 'A' + (index + 1),
-                  action: '',
-                  dice: "",
-                  resultPlayer: [],
-                  resultOutcome: ''
-                })
-              }
-            });
-            let tempInterval = {
-              interval: this.currentIntervalStart + '-' + (this.currentIntervalStart + this.intervalDuraction),
-              actions: tempActions
-            }
-            this.logTableSample.push(tempInterval)
-            this.currentIntervalStart += this.intervalDuraction
-          } else if (playertype == 'p') {
-            this.currentTeam = 'a'
-            this.pForceStatus.forEach((element, index) => {
-              if (element == 1 || element == 2) {
-                this.logTableSample[this.logTableSample.length - 1].actions.push({
-                  player: 'P' + (index + 1),
-                  action: '',
-                  dice: "",
-                  resultPlayer: [],
-                  resultOutcome: ''
-                })
-              }
-            });
-          }
-        },
-        createResultModal: function (itemIndex, actionIndex) {
-          this.currentActionIndex = actionIndex
-          this.currentItemIndex = itemIndex
-          this.directions = false
-          $('#myModal').modal()
-        },
-        createResultsModalNextPlayer: function () {
-          this.modalHidden()
-          console.log("in here but")
-          let actionIndex = this.currentActionIndex
-          let itemIndex = this.currentItemIndex
+        functionName: function () {
 
-          if (actionIndex < this.logTableSample[itemIndex].actions.length - 1) {
-            console.log("shouldn't be here")
-            //  TODO do more error checking on this
-            this.createResultModal(itemIndex, actionIndex + 1)
-          } else {
-            $('#myModal').modal('toggle')
-          }
-        },
-        readPlayerStatusFromLog: function (playerTeam, currentItemIndex, currentActionIndex) {
-          playerTeam = playerTeam.charAt(0).toLowerCase()
-          let playerType = ''
-          let playerNumber = ''
-          let aStatus = new Array(Number(this.createAdversariesCount)).fill(1);
-          let pStatus = new Array(Number(this.forceCount)).fill(1);
-          let playerOutcome = ''
-          for (let i = 0; i <= currentItemIndex; i++) {
-            for (let n = 0; n < currentActionIndex; n++) {
-              element = this.logTableSample[i].actions[n]
-              playerOutcome = element.resultOutcome
-              // if (playerOutcome.toLowerCase() == this.playerOutcomes[0].toLowerCase()) {
-                // playerOutcome = 0
-              // } else if (playerOutcome.toLowerCase() == this.playerOutcomes[2].toLowerCase()) {
-                // playerOutcome = 2
-              // } else {
-                // playerOutcome = 1
-              // }
-              element.resultPlayer.forEach(a => {
-                playerType = a.substring(0, 1).toLowerCase()
-                playerNumber = a.substring(1)
-                if (playerType == 'a') {
-                  aStatus[playerNumber - 1] = playerOutcome
-                } else if (playerType == 'p') {
-                  pStatus[playerNumber - 1] = playerOutcome
-                }
-              });
-            }
-          }
-          let playerList = []
-          playerList.length = 0
-          if (playerTeam == 'a') {
-            pStatus.forEach((element, index) => {
-              if (element == 1 || element == 2) {
-                playerList.push('P' + (index + 1))
-              }
-            });
-          } else if (playerTeam == 'p') {
-            aStatus.forEach((element, index) => {
-              if (element == 1 || element == 2) {
-                playerList.push('A' + (index + 1))
-              }
-            });
-          }
-          return playerList
         }
       }
     });
   </script>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 </body>
 
 </html>
